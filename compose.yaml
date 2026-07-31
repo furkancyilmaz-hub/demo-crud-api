@@ -6,4 +6,10 @@ services:
       - 'POSTGRES_PASSWORD=12345'
       - 'POSTGRES_USER=myuser'
     ports:
-      - '5432'
+      - '5432:5432'
+    volumes:
+      - 'pgdata:/var/lib/postgresql'
+      - './db:/docker-entrypoint-initdb.d:ro'
+
+volumes:
+  pgdata:
