@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "PowerShell(docker version *)",
-      "PowerShell(Start-Process \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\")"
+      "PowerShell(Start-Process \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\")",
+      "PowerShell(.\\\\mvnw.cmd -q compile; Write-Output \"EXITCODE=$LASTEXITCODE\")",
+      "PowerShell(.\\\\mvnw.cmd -q test; Write-Output \"EXITCODE=$LASTEXITCODE\")",
+      "PowerShell(Test-Path *)"
     ]
   }
 }
