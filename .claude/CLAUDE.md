@@ -14,8 +14,7 @@ Projeye özgü bilgi (domain, mimari, endpoint'ler) repo'nun kendi `CLAUDE.md`'s
 
 ## Paketleme ve katmanlar
 
-- Feature-based paketleme (`customer/`, `policy/`). `controller/`, `service/`,
-  `repository/` gibi teknik katman paketleri açma.
+- Teknik katman entity/, service/, controller/, dto/ paketleri aç
 - **Controller**: HTTP'ye özgü işler — validation, DTO dönüşümü, delegasyon.
   İş mantığı ve repository çağrısı yok.
 - **Service**: iş mantığı. `@Transactional` bu katmanda.
