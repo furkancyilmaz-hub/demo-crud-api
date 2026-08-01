@@ -1,9 +1,13 @@
 package com.furkan.democrudapi.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,6 +46,23 @@ class GlobalExceptionHandlerTest {
                 new ResourceInUseException("Proposal has existing customers: 1"));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void shouldMapMissingServletRequestParameterExceptionTo400() {
+        ResponseEntity<ErrorResponse> response = handler.handleMissingParameter(
+                new MissingServletRequestParameterException("correlationId", "String"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().message()).contains("correlationId");
+    }
+
+    @Test
+    void shouldMapConstraintViolationExceptionTo400() {
+        ResponseEntity<ErrorResponse> response = handler.handleConstraintViolation(
+                new ConstraintViolationException(Set.of()));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
