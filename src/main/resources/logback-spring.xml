@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <springProperty scope="context" name="DB_LOG_URL" source="spring.datasource.url"/>
+    <springProperty scope="context" name="DB_LOG_USERNAME" source="spring.datasource.username"/>
+    <springProperty scope="context" name="DB_LOG_PASSWORD" source="spring.datasource.password"/>
+
+    <appender name="DB" class="com.furkan.democrudapi.logging.DbLogAppender">
+        <url>${DB_LOG_URL}</url>
+        <username>${DB_LOG_USERNAME}</username>
+        <password>${DB_LOG_PASSWORD}</password>
+    </appender>
+
+    <!--
+      DB appender kendi DriverManager bağlantısını kullanır (bkz. DbLogAppender), HikariCP gibi
+      SLF4J'ye loglayan bir pooling katmanı YOK. Bu yüzden burada sonsuz döngüyü önlemek için
+      ekstra bir logger seviyesi kapatmaya gerek yok. Bağlantı yönetimi ileride SLF4J'ye loglayan
+      bir kütüphaneyle değiştirilirse bu varsayım yeniden gözden geçirilmeli.
+    -->
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="DB"/>
+    </logger>
+</configuration>
