@@ -22,6 +22,17 @@ class BugPropertiesBindingTest {
         contextRunner.run(context -> assertThat(context.getBean(BugProperties.class).isNPlusOne()).isFalse());
     }
 
+    @Test
+    void shouldBindMissingIndexFlagFromKebabCaseKey() {
+        contextRunner.withPropertyValues("bug.missing-index=true")
+                .run(context -> assertThat(context.getBean(BugProperties.class).isMissingIndex()).isTrue());
+    }
+
+    @Test
+    void shouldDefaultMissingIndexToDisabledWhenKeyIsAbsent() {
+        contextRunner.run(context -> assertThat(context.getBean(BugProperties.class).isMissingIndex()).isFalse());
+    }
+
     @EnableConfigurationProperties(BugProperties.class)
     static class TestConfig {
     }

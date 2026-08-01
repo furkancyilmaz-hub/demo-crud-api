@@ -117,6 +117,20 @@ class CustomerServiceTest {
     }
 
     @Test
+    void shouldReturnPagedCustomersFilteredByCity() {
+        Proposal proposal = newProposal(1L);
+        Customer customer = newCustomer(10L, proposal,
+                new CustomerCreateRequest(1L, "12345678901", "Jane Doe", "Ankara", CustomerStatus.ACTIVE));
+        Page<Customer> page = new PageImpl<>(List.of(customer));
+        when(customerRepository.findByCity("Ankara", PageRequest.of(0, 10))).thenReturn(page);
+
+        Page<CustomerResponse> result = customerService.searchByCity("Ankara", PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().city()).isEqualTo("Ankara");
+    }
+
+    @Test
     void shouldReturnEmptyPaymentsWhenWithPaymentsFalse() {
         Customer customer = newCustomerWithPayments();
         when(customerRepository.findAll(PageRequest.of(0, 10)))
