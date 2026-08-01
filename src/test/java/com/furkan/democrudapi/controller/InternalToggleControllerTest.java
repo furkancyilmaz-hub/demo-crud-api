@@ -1,4 +1,4 @@
-package com.furkan.democrudapi.internal;
+package com.furkan.democrudapi.controller;
 
 import com.furkan.democrudapi.config.BugProperties;
 import org.junit.jupiter.api.Test;

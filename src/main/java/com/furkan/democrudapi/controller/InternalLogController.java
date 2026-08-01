@@ -1,4 +1,4 @@
-package com.furkan.democrudapi.internal;
+package com.furkan.democrudapi.controller;
 
 import com.furkan.democrudapi.dto.LogEntryResponse;
 import com.furkan.democrudapi.entity.LogLevel;
