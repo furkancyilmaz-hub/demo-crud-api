@@ -15,8 +15,8 @@ import org.slf4j.MDC;
 import java.io.IOException;
 import java.util.UUID;
 
-import static com.furkan.democrudapi.filter.CorrelationIdFilter.CORRELATION_ID_HEADER;
-import static com.furkan.democrudapi.filter.CorrelationIdFilter.CORRELATION_ID_MDC_KEY;
+import static com.furkan.democrudapi.constants.CorrelationConstants.CORRELATION_ID_HEADER;
+import static com.furkan.democrudapi.constants.CorrelationConstants.CORRELATION_ID_MDC_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
