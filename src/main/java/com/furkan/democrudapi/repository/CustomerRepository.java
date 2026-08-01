@@ -13,6 +13,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Page<Customer> findByProposalId(Long proposalId, Pageable pageable);
 
+    Page<Customer> findByCity(String city, Pageable pageable);
+
     boolean existsByProposalId(Long proposalId);
 
     /**

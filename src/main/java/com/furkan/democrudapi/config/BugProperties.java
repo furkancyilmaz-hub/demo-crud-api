@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class BugProperties {
 
     private boolean nPlusOne;
+    private boolean missingIndex;
 
     public boolean isNPlusOne() {
         return nPlusOne;
@@ -20,5 +21,13 @@ public class BugProperties {
 
     public void setNPlusOne(boolean nPlusOne) {
         this.nPlusOne = nPlusOne;
+    }
+
+    public boolean isMissingIndex() {
+        return missingIndex;
+    }
+
+    public void setMissingIndex(boolean missingIndex) {
+        this.missingIndex = missingIndex;
     }
 }

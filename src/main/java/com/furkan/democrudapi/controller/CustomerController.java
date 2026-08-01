@@ -51,6 +51,11 @@ public class CustomerController {
         return customerService.list(proposalId, withPayments, pageable);
     }
 
+    @GetMapping("/search")
+    public Page<CustomerResponse> searchByCity(@RequestParam String city, Pageable pageable) {
+        return customerService.searchByCity(city, pageable);
+    }
+
     @PutMapping("/{id}")
     public CustomerResponse update(@PathVariable Long id, @Valid @RequestBody CustomerUpdateRequest request) {
         return customerService.update(id, request);

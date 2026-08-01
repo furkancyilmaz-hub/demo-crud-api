@@ -56,6 +56,10 @@ public class CustomerService {
         return CustomerResponse.from(findCustomerOrThrow(id));
     }
 
+    public Page<CustomerResponse> searchByCity(String city, Pageable pageable) {
+        return customerRepository.findByCity(city, pageable).map(CustomerResponse::from);
+    }
+
     public Page<CustomerResponse> list(Long proposalId, boolean withPayments, Pageable pageable) {
         Page<Customer> page = proposalId != null
                 ? customerRepository.findByProposalId(proposalId, pageable)
