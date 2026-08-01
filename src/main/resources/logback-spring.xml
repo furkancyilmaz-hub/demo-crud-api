@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <appender name="DB" class="com.furkan.democrudapi.logging.DbLogAppender"/>
+
+    <!--
+      DB appender, Spring'in kendi DataSource'unu (LogDataSourceHolder üzerinden, context
+      refresh sırasında doldurulur) düz JDBC ile kullanır. Sonsuz döngü riski yok: appender
+      kendi INSERT'ini Hibernate üzerinden değil düz JDBC ile yaptığı için org.hibernate.SQL'i
+      tekrar tetiklemiyor; ayrıca DB appender sadece org.hibernate.SQL logger'ına bağlı olduğu
+      için Hikari'nin kendi logları (com.zaxxer.hikari.*) zaten buraya hiç ulaşmıyor.
+    -->
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="DB"/>
+    </logger>
+</configuration>
