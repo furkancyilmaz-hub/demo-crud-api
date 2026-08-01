@@ -45,8 +45,10 @@ public class CustomerController {
     }
 
     @GetMapping
-    public Page<CustomerResponse> list(@RequestParam(required = false) Long proposalId, Pageable pageable) {
-        return customerService.list(proposalId, pageable);
+    public Page<CustomerResponse> list(@RequestParam(required = false) Long proposalId,
+                                       @RequestParam(defaultValue = "false") boolean withPayments,
+                                       Pageable pageable) {
+        return customerService.list(proposalId, withPayments, pageable);
     }
 
     @PutMapping("/{id}")

@@ -1,10 +1,13 @@
 package com.furkan.democrudapi.service;
 
+import com.furkan.democrudapi.config.BugProperties;
 import com.furkan.democrudapi.dto.CustomerCreateRequest;
 import com.furkan.democrudapi.dto.CustomerResponse;
 import com.furkan.democrudapi.dto.CustomerUpdateRequest;
 import com.furkan.democrudapi.entity.Customer;
 import com.furkan.democrudapi.entity.CustomerStatus;
+import com.furkan.democrudapi.entity.Payment;
+import com.furkan.democrudapi.entity.PaymentStatus;
 import com.furkan.democrudapi.entity.Proposal;
 import com.furkan.democrudapi.entity.ProposalStatus;
 import com.furkan.democrudapi.exception.InvalidReferenceException;
@@ -17,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -31,6 +35,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +51,9 @@ class CustomerServiceTest {
 
     @Mock
     private PaymentRepository paymentRepository;
+
+    @Spy
+    private BugProperties bugProperties = new BugProperties();
 
     @InjectMocks
     private CustomerService customerService;
@@ -102,9 +111,63 @@ class CustomerServiceTest {
         Page<Customer> page = new PageImpl<>(List.of(customer));
         when(customerRepository.findByProposalId(1L, PageRequest.of(0, 10))).thenReturn(page);
 
-        Page<CustomerResponse> result = customerService.list(1L, PageRequest.of(0, 10));
+        Page<CustomerResponse> result = customerService.list(1L, false, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).hasSize(1);
+    }
+
+    @Test
+    void shouldReturnEmptyPaymentsWhenWithPaymentsFalse() {
+        Customer customer = newCustomerWithPayments();
+        when(customerRepository.findAll(PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(customer)));
+
+        Page<CustomerResponse> result = customerService.list(null, false, PageRequest.of(0, 10));
+
+        assertThat(result.getContent().getFirst().payments()).isEmpty();
+        verify(customerRepository, never()).findByIdIn(anyCollection());
+    }
+
+    @Test
+    void shouldLoadPaymentsPerCustomerWhenNPlusOneEnabled() {
+        Customer customer = newCustomerWithPayments();
+        bugProperties.setNPlusOne(true);
+        when(customerRepository.findAll(PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(customer)));
+
+        Page<CustomerResponse> result = customerService.list(null, true, PageRequest.of(0, 10));
+
+        assertThat(result.getContent().getFirst().payments()).hasSize(2);
+        verify(customerRepository, never()).findByIdIn(anyCollection());
+    }
+
+    @Test
+    void shouldLoadPaymentsInSingleQueryWhenNPlusOneDisabled() {
+        Customer customer = newCustomerWithPayments();
+        bugProperties.setNPlusOne(false);
+        when(customerRepository.findAll(PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(customer)));
+        when(customerRepository.findByIdIn(List.of(10L))).thenReturn(List.of(customer));
+
+        Page<CustomerResponse> result = customerService.list(null, true, PageRequest.of(0, 10));
+
+        assertThat(result.getContent().getFirst().payments()).hasSize(2);
+        verify(customerRepository).findByIdIn(List.of(10L));
+    }
+
+    @Test
+    void shouldReturnSameContentRegardlessOfNPlusOneFlag() {
+        Customer customer = newCustomerWithPayments();
+        when(customerRepository.findAll(PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(customer)));
+        when(customerRepository.findByIdIn(List.of(10L))).thenReturn(List.of(customer));
+
+        bugProperties.setNPlusOne(true);
+        List<CustomerResponse> withBug = customerService.list(null, true, PageRequest.of(0, 10)).getContent();
+        bugProperties.setNPlusOne(false);
+        List<CustomerResponse> withoutBug = customerService.list(null, true, PageRequest.of(0, 10)).getContent();
+
+        assertThat(withBug).isEqualTo(withoutBug);
     }
 
     @Test
@@ -158,5 +221,19 @@ class CustomerServiceTest {
                 request.status());
         ReflectionTestUtils.setField(customer, "id", id);
         return customer;
+    }
+
+    private Customer newCustomerWithPayments() {
+        Customer customer = newCustomer(10L, newProposal(1L),
+                new CustomerCreateRequest(1L, "12345678901", "Jane Doe", "Istanbul", CustomerStatus.ACTIVE));
+        ReflectionTestUtils.setField(customer, "payments",
+                List.of(newPayment(100L, customer), newPayment(101L, customer)));
+        return customer;
+    }
+
+    private Payment newPayment(Long id, Customer customer) {
+        Payment payment = new Payment(customer, new BigDecimal("125.50"), LocalDate.now(), PaymentStatus.PENDING);
+        ReflectionTestUtils.setField(payment, "id", id);
+        return payment;
     }
 }

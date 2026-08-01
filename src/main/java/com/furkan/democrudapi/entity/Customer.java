@@ -10,8 +10,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "customer")
@@ -25,6 +29,9 @@ public class Customer {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proposal_id", nullable = false)
     private Proposal proposal;
+
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
+    private List<Payment> payments = new ArrayList<>();
 
     @Column(name = "identity_no", nullable = false, length = 20)
     private String identityNo;
