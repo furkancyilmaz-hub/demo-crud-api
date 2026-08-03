@@ -31,6 +31,11 @@ public class GlobalExceptionHandler {
         return errorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(InvalidLogQueryException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidLogQuery(InvalidLogQueryException ex) {
+        return errorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     @ExceptionHandler({DuplicateProposalNoException.class, ResourceInUseException.class})
     public ResponseEntity<ErrorResponse> handleConflict(RuntimeException ex) {
         return errorResponse(HttpStatus.CONFLICT, ex.getMessage());

@@ -32,11 +32,12 @@ CREATE TABLE payment (
 
 -- Uygulama loglarının yazıldığı tablo (F05).
 CREATE TABLE app_log (
-    id             BIGSERIAL   PRIMARY KEY,
+    id             BIGSERIAL    PRIMARY KEY,
     correlation_id VARCHAR(64),
-    timestamp      TIMESTAMPTZ NOT NULL,
-    level          VARCHAR(10) NOT NULL,
+    timestamp      TIMESTAMPTZ  NOT NULL,
+    level          VARCHAR(10)  NOT NULL,
     logger         VARCHAR(200),
+    thread         VARCHAR(120),
     message        TEXT
 );
 
@@ -47,6 +48,10 @@ CREATE INDEX idx_customer_proposal ON customer(proposal_id);
 CREATE INDEX idx_payment_customer  ON payment(customer_id);
 
 CREATE INDEX idx_app_log_correlation ON app_log(correlation_id, timestamp);
+
+-- /internal/logs ve /internal/requests artık saf zaman aralığıyla da sorgulanıyor;
+-- idx_app_log_correlation'ın leading kolonu correlation_id olduğu için bunu karşılamaz.
+CREATE INDEX idx_app_log_timestamp ON app_log(timestamp, id);
 
 -- customer.city üzerinde bilerek index YOK.
 -- Index önerisi SP0010 ile proje kapsamından çıkarıldı; bu kolon indexsiz

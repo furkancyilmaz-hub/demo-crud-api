@@ -1,15 +1,20 @@
 package com.furkan.democrudapi.filter;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.IOException;
@@ -40,14 +45,25 @@ class CorrelationIdFilterTest {
     @Mock
     private FilterChain filterChain;
 
+    private ListAppender<ILoggingEvent> logAppender;
+
+    @BeforeEach
+    void captureFilterLog() {
+        logAppender = new ListAppender<>();
+        logAppender.start();
+        filterLogger().addAppender(logAppender);
+    }
+
     @AfterEach
-    void clearMdc() {
+    void clearMdcAndLog() {
+        filterLogger().detachAppender(logAppender);
         MDC.clear();
     }
 
     @Test
     void shouldPreserveIncomingCorrelationId() throws ServletException, IOException {
         when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn("caller-id-123");
+        when(request.getRequestURI()).thenReturn("/api/customers");
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -58,6 +74,7 @@ class CorrelationIdFilterTest {
     @Test
     void shouldGenerateCorrelationIdWhenHeaderMissing() throws ServletException, IOException {
         when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn(null);
+        when(request.getRequestURI()).thenReturn("/api/customers");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 
         filter.doFilterInternal(request, response, filterChain);
@@ -69,6 +86,7 @@ class CorrelationIdFilterTest {
     @Test
     void shouldGenerateCorrelationIdWhenHeaderBlank() throws ServletException, IOException {
         when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn("   ");
+        when(request.getRequestURI()).thenReturn("/api/customers");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 
         filter.doFilterInternal(request, response, filterChain);
@@ -80,6 +98,7 @@ class CorrelationIdFilterTest {
     @Test
     void shouldMakeCorrelationIdAvailableInMdcDuringChainExecution() throws ServletException, IOException {
         when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn("caller-id-123");
+        when(request.getRequestURI()).thenReturn("/api/customers");
         String[] mdcValueDuringChain = new String[1];
         doAnswer(invocation -> {
             mdcValueDuringChain[0] = MDC.get(CORRELATION_ID_MDC_KEY);
@@ -94,6 +113,7 @@ class CorrelationIdFilterTest {
     @Test
     void shouldClearMdcAfterSuccessfulChain() throws ServletException, IOException {
         when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn("caller-id-123");
+        when(request.getRequestURI()).thenReturn("/api/customers");
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -103,11 +123,51 @@ class CorrelationIdFilterTest {
     @Test
     void shouldClearMdcEvenWhenChainThrows() throws ServletException, IOException {
         when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn("caller-id-123");
+        when(request.getRequestURI()).thenReturn("/api/customers");
         doThrow(new ServletException("boom")).when(filterChain).doFilter(request, response);
 
         assertThatThrownBy(() -> filter.doFilterInternal(request, response, filterChain))
                 .isInstanceOf(ServletException.class);
 
         assertThat(MDC.get(CORRELATION_ID_MDC_KEY)).isNull();
+    }
+
+    @Test
+    void shouldLogRequestCompletedInFixedFormat() throws ServletException, IOException {
+        when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn("caller-id-123");
+        when(request.getMethod()).thenReturn("GET");
+        when(request.getRequestURI()).thenReturn("/api/customers/detail");
+        when(response.getStatus()).thenReturn(200);
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(logAppender.list).hasSize(1);
+        assertThat(logAppender.list.get(0).getFormattedMessage())
+                .matches("REQUEST_COMPLETED method=GET path=/api/customers/detail status=200 durationMs=\\d+");
+    }
+
+    @Test
+    void shouldLogRequestCompletedWithCorrelationIdStillInMdc() throws ServletException, IOException {
+        when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn("caller-id-123");
+        when(request.getRequestURI()).thenReturn("/api/customers");
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(logAppender.list.get(0).getMDCPropertyMap()).containsEntry(CORRELATION_ID_MDC_KEY, "caller-id-123");
+    }
+
+    @Test
+    void shouldNotLogRequestCompletedForInternalEndpoints() throws ServletException, IOException {
+        when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn("caller-id-123");
+        when(request.getRequestURI()).thenReturn("/internal/logs");
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        assertThat(logAppender.list).isEmpty();
+    }
+
+    private Logger filterLogger() {
+        return (Logger) LoggerFactory.getLogger(CorrelationIdFilter.class);
     }
 }

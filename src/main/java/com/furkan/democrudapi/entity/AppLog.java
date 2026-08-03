@@ -34,17 +34,22 @@ public class AppLog {
     @Column(name = "logger", length = 200)
     private String logger;
 
+    @Column(name = "thread", length = 120)
+    private String thread;
+
     @Column(name = "message", columnDefinition = "TEXT")
     private String message;
 
     protected AppLog() {
     }
 
-    public AppLog(String correlationId, Instant timestamp, LogLevel level, String logger, String message) {
+    public AppLog(String correlationId, Instant timestamp, LogLevel level, String logger, String thread,
+                  String message) {
         this.correlationId = correlationId;
         this.timestamp = timestamp;
         this.level = level;
         this.logger = logger;
+        this.thread = thread;
         this.message = message;
     }
 

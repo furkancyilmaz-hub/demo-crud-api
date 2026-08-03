@@ -21,4 +21,24 @@
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="DB"/>
     </logger>
+
+    <!--
+      Bind değerleri (T0011): org.hibernate.SQL yalnızca '?' basar, algoritma child
+      sorguların bind ettiği FK değerlerini görmek zorunda. Hibernate 7'de bu logger
+      org.hibernate.orm.jdbc.bind; TRACE seviyesinde çok satır üretir.
+    -->
+    <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="DB"/>
+    </logger>
+
+    <!--
+      REQUEST_COMPLETED satırı da app_log'a düşmeli. DB appender root'a bağlanmıyor:
+      aksi hâlde tüm framework/startup logları tabloya akar ve LogDataSourceHolder
+      dolmadan önceki olaylar addError gürültüsü üretir.
+    -->
+    <logger name="com.furkan.democrudapi.filter.CorrelationIdFilter" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="DB"/>
+    </logger>
 </configuration>
