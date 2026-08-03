@@ -9,9 +9,10 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
-bug:
-  n-plus-one: true
-  missing-index: true
+  data:
+    web:
+      pageable:
+        default-page-size: 200
 logging:
   level:
     org.hibernate.SQL: DEBUG

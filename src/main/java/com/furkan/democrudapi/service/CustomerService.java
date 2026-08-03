@@ -1,6 +1,5 @@
 package com.furkan.democrudapi.service;
 
-import com.furkan.democrudapi.config.BugProperties;
 import com.furkan.democrudapi.dto.CustomerCreateRequest;
 import com.furkan.democrudapi.dto.CustomerResponse;
 import com.furkan.democrudapi.dto.CustomerUpdateRequest;
@@ -33,14 +32,12 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final ProposalRepository proposalRepository;
     private final PaymentRepository paymentRepository;
-    private final BugProperties bugProperties;
 
     public CustomerService(CustomerRepository customerRepository, ProposalRepository proposalRepository,
-                            PaymentRepository paymentRepository, BugProperties bugProperties) {
+                            PaymentRepository paymentRepository) {
         this.customerRepository = customerRepository;
         this.proposalRepository = proposalRepository;
         this.paymentRepository = paymentRepository;
-        this.bugProperties = bugProperties;
     }
 
     @Transactional
@@ -60,23 +57,42 @@ public class CustomerService {
         return customerRepository.findByCity(city, pageable).map(CustomerResponse::from);
     }
 
-    public Page<CustomerResponse> list(Long proposalId, boolean withPayments, Pageable pageable) {
-        Page<Customer> page = proposalId != null
+    public Page<CustomerResponse> list(Long proposalId, Pageable pageable) {
+        return findPage(proposalId, pageable).map(CustomerResponse::from);
+    }
+
+    /**
+     * Reads the payments of each customer straight off the lazy association, one
+     * customer at a time.
+     */
+    public Page<CustomerResponse> listDetail(Long proposalId, Pageable pageable) {
+        Page<Customer> page = findPage(proposalId, pageable);
+        return withPayments(page, loadPaymentsPerCustomer(page.getContent()));
+    }
+
+    /**
+     * Returns the same data as {@link #listDetail(Long, Pageable)}; only the fetch
+     * strategy differs.
+     */
+    public Page<CustomerResponse> listOverview(Long proposalId, Pageable pageable) {
+        Page<Customer> page = findPage(proposalId, pageable);
+        return withPayments(page, loadPaymentsInSingleQuery(page.getContent()));
+    }
+
+    private Page<Customer> findPage(Long proposalId, Pageable pageable) {
+        return proposalId != null
                 ? customerRepository.findByProposalId(proposalId, pageable)
                 : customerRepository.findAll(pageable);
-        if (!withPayments) {
-            return page.map(CustomerResponse::from);
-        }
-        Map<Long, List<Payment>> paymentsByCustomer = bugProperties.isNPlusOne()
-                ? loadPaymentsPerCustomer(page.getContent())
-                : loadPaymentsInSingleQuery(page.getContent());
+    }
+
+    private Page<CustomerResponse> withPayments(Page<Customer> page, Map<Long, List<Payment>> paymentsByCustomer) {
         return page.map(customer -> CustomerResponse.from(
                 customer, paymentsByCustomer.getOrDefault(customer.getId(), List.of())));
     }
 
     /**
-     * Deliberate N+1 (SP008): initializing the lazy collection one customer at a time
-     * runs a separate "select ... from payment where customer_id=?" per row.
+     * Initializing the lazy collection one customer at a time runs a separate
+     * "select ... from payment where customer_id=?" per row.
      */
     private Map<Long, List<Payment>> loadPaymentsPerCustomer(List<Customer> customers) {
         Map<Long, List<Payment>> paymentsByCustomer = new LinkedHashMap<>();

@@ -48,7 +48,7 @@ CREATE INDEX idx_payment_customer  ON payment(customer_id);
 
 CREATE INDEX idx_app_log_correlation ON app_log(correlation_id, timestamp);
 
--- DİKKAT: customer.city üzerinde bilerek index YOK.
--- F09 senaryosu bu kolonun indexsiz olmasına dayanıyor; agent Seq Scan'i tespit
--- edip index önerecek, index /internal/toggle ile runtime'da oluşturulacak.
--- Buraya bir city index'i eklersen o senaryo çalışmaz.
+-- customer.city üzerinde bilerek index YOK.
+-- Index önerisi SP0010 ile proje kapsamından çıkarıldı; bu kolon indexsiz
+-- kaldığı için /api/customers/search sorgusu Seq Scan yapar. Analiz kapsamı
+-- N+1 senaryolarıdır, index tuning değil.

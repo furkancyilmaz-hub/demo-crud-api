@@ -1,8 +1,11 @@
 package com.furkan.democrudapi.service;
 
 import com.furkan.democrudapi.dto.ProposalCreateRequest;
+import com.furkan.democrudapi.dto.ProposalDetailResponse;
 import com.furkan.democrudapi.dto.ProposalResponse;
 import com.furkan.democrudapi.dto.ProposalUpdateRequest;
+import com.furkan.democrudapi.entity.Customer;
+import com.furkan.democrudapi.entity.CustomerStatus;
 import com.furkan.democrudapi.entity.Proposal;
 import com.furkan.democrudapi.entity.ProposalStatus;
 import com.furkan.democrudapi.exception.DuplicateProposalNoException;
@@ -109,6 +112,21 @@ class ProposalServiceTest {
     }
 
     @Test
+    void shouldIncludeCustomersWhenListingDetail() {
+        Proposal proposal = newProposal(1L, "PN-001", ProposalStatus.DRAFT, LocalDate.now(), BigDecimal.TEN);
+        ReflectionTestUtils.setField(proposal, "customers",
+                List.of(newCustomer(10L, proposal, "Jane Doe"), newCustomer(11L, proposal, "John Doe")));
+        when(proposalRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(proposal)));
+
+        Page<ProposalDetailResponse> result = proposalService.listDetail(PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().customers())
+                .extracting(ProposalDetailResponse.CustomerSummary::fullName)
+                .containsExactly("Jane Doe", "John Doe");
+    }
+
+    @Test
     void shouldUpdateProposalWhenIdExists() {
         Proposal proposal = newProposal(1L, "PN-001", ProposalStatus.DRAFT, LocalDate.now(), BigDecimal.TEN);
         ProposalUpdateRequest request = new ProposalUpdateRequest(
@@ -156,5 +174,11 @@ class ProposalServiceTest {
         Proposal proposal = new Proposal(proposalNo, status, issueDate, totalPremium);
         ReflectionTestUtils.setField(proposal, "id", id);
         return proposal;
+    }
+
+    private Customer newCustomer(Long id, Proposal proposal, String fullName) {
+        Customer customer = new Customer(proposal, "12345678901", fullName, "Istanbul", CustomerStatus.ACTIVE);
+        ReflectionTestUtils.setField(customer, "id", id);
+        return customer;
     }
 }

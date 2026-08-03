@@ -1,6 +1,7 @@
 package com.furkan.democrudapi.service;
 
 import com.furkan.democrudapi.dto.ProposalCreateRequest;
+import com.furkan.democrudapi.dto.ProposalDetailResponse;
 import com.furkan.democrudapi.dto.ProposalResponse;
 import com.furkan.democrudapi.dto.ProposalUpdateRequest;
 import com.furkan.democrudapi.entity.Proposal;
@@ -16,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -52,6 +55,15 @@ public class ProposalService {
 
     public Page<ProposalResponse> list(Pageable pageable) {
         return proposalRepository.findAll(pageable).map(ProposalResponse::from);
+    }
+
+    /**
+     * Reads the customers of each proposal straight off the lazy association, one
+     * proposal at a time.
+     */
+    public Page<ProposalDetailResponse> listDetail(Pageable pageable) {
+        return proposalRepository.findAll(pageable)
+                .map(proposal -> ProposalDetailResponse.from(proposal, List.copyOf(proposal.getCustomers())));
     }
 
     @Transactional

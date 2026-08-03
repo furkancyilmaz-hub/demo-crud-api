@@ -1,6 +1,7 @@
 package com.furkan.democrudapi.controller;
 
 import com.furkan.democrudapi.dto.ProposalCreateRequest;
+import com.furkan.democrudapi.dto.ProposalDetailResponse;
 import com.furkan.democrudapi.dto.ProposalResponse;
 import com.furkan.democrudapi.dto.ProposalUpdateRequest;
 import com.furkan.democrudapi.service.ProposalService;
@@ -46,6 +47,11 @@ public class ProposalController {
     @GetMapping
     public Page<ProposalResponse> list(Pageable pageable) {
         return proposalService.list(pageable);
+    }
+
+    @GetMapping("/detail")
+    public Page<ProposalDetailResponse> listDetail(Pageable pageable) {
+        return proposalService.listDetail(pageable);
     }
 
     @PutMapping("/{id}")
