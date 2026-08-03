@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.furkan.democrudapi.constants.CorrelationConstants.CORRELATION_ID_HEADER;
 import static com.furkan.democrudapi.constants.CorrelationConstants.CORRELATION_ID_MDC_KEY;
+import static com.furkan.democrudapi.constants.RequestLogConstants.DOC_PATH_PREFIXES;
 import static com.furkan.democrudapi.constants.RequestLogConstants.INTERNAL_PATH_PREFIX;
 import static com.furkan.democrudapi.constants.RequestLogConstants.REQUEST_COMPLETED_PREFIX;
 
@@ -48,11 +49,23 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 
     private void logRequestCompleted(HttpServletRequest request, HttpServletResponse response, long startedAt) {
         String path = request.getRequestURI();
-        if (path.startsWith(INTERNAL_PATH_PREFIX)) {
+        if (isNotRecorded(path)) {
             return;
         }
         long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt);
         log.info("{} method={} path={} status={} durationMs={}",
                 REQUEST_COMPLETED_PREFIX, request.getMethod(), path, response.getStatus(), durationMs);
+    }
+
+    private boolean isNotRecorded(String path) {
+        if (path.startsWith(INTERNAL_PATH_PREFIX)) {
+            return true;
+        }
+        for (String prefix : DOC_PATH_PREFIXES) {
+            if (path.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

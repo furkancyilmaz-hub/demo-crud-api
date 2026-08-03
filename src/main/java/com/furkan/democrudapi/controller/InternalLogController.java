@@ -4,6 +4,8 @@ import com.furkan.democrudapi.dto.LogEntryResponse;
 import com.furkan.democrudapi.entity.LogLevel;
 import com.furkan.democrudapi.exception.InvalidLogQueryException;
 import com.furkan.democrudapi.service.LogQueryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/internal/logs")
 @Validated
+@Tag(name = "Internal — logs", description = "Application log records consumed by the N+1 analysis")
 public class InternalLogController {
 
     private final LogQueryService logQueryService;
@@ -28,6 +31,7 @@ public class InternalLogController {
         this.logQueryService = logQueryService;
     }
 
+    @Operation(summary = "Query log records by correlation id and/or time range")
     @GetMapping
     public List<LogEntryResponse> query(
             @RequestParam(required = false) String correlationId,

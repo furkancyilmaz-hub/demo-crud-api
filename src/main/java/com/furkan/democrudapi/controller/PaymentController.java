@@ -4,6 +4,8 @@ import com.furkan.democrudapi.dto.PaymentCreateRequest;
 import com.furkan.democrudapi.dto.PaymentResponse;
 import com.furkan.democrudapi.dto.PaymentUpdateRequest;
 import com.furkan.democrudapi.service.PaymentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +23,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/payments")
+@Tag(name = "Payments", description = "Payment CRUD")
 public class PaymentController {
 
     private final PaymentService paymentService;
@@ -29,6 +32,7 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
+    @Operation(summary = "Create a payment")
     @PostMapping
     public ResponseEntity<PaymentResponse> create(@Valid @RequestBody PaymentCreateRequest request) {
         PaymentResponse response = paymentService.create(request);
@@ -39,21 +43,25 @@ public class PaymentController {
         return ResponseEntity.created(location).body(response);
     }
 
+    @Operation(summary = "Get a single payment by id")
     @GetMapping("/{id}")
     public PaymentResponse getById(@PathVariable Long id) {
         return paymentService.getById(id);
     }
 
+    @Operation(summary = "List payments, optionally filtered by customer")
     @GetMapping
     public Page<PaymentResponse> list(@RequestParam(required = false) Long customerId, Pageable pageable) {
         return paymentService.list(customerId, pageable);
     }
 
+    @Operation(summary = "Update a payment")
     @PutMapping("/{id}")
     public PaymentResponse update(@PathVariable Long id, @Valid @RequestBody PaymentUpdateRequest request) {
         return paymentService.update(id, request);
     }
 
+    @Operation(summary = "Delete a payment")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         paymentService.delete(id);

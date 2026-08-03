@@ -1,6 +1,15 @@
 package com.furkan.democrudapi.constants;
 
+import java.util.List;
+
 public class RequestLogConstants {
+
+    /**
+     * Prefixes of the API documentation endpoints. Opening the Swagger page fires a dozen
+     * asset requests on top of the spec itself; recorded, they would drown the real traffic
+     * the analysis agent looks at.
+     */
+    public static final List<String> DOC_PATH_PREFIXES = List.of("/swagger-ui", "/v3/api-docs");
 
     /**
      * Marker of the single log line written when a request completes. The format is fixed —
