@@ -17,3 +17,7 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+# Infrastructure tables kept out of /internal/schema/foreign-keys.
+schema-metadata:
+  excluded-tables:
+    - app_log
