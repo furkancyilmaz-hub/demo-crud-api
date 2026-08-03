@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Testlerde DB appender'ı devre dışı bırakır. Logback bu dosyayı logback-spring.xml'e
+  tercih eder. Aksi hâlde slice testler logback-spring.xml'i yükler, DbLogAppender
+  DataSource bulamaz ve her log satırı için "DataSource not ready yet" status hatası basar.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

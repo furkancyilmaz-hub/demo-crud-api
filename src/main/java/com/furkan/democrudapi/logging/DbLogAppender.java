@@ -9,13 +9,15 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
+import static com.furkan.democrudapi.constants.CorrelationConstants.CORRELATION_ID_MDC_KEY;
+
 public class DbLogAppender extends AppenderBase<ILoggingEvent> {
 
     private static final String INSERT_SQL =
-            "INSERT INTO app_log (correlation_id, timestamp, level, logger, message) VALUES (?, ?, ?, ?, ?)";
-    private static final String CORRELATION_ID_MDC_KEY = "correlationId";
+            "INSERT INTO app_log (correlation_id, timestamp, level, logger, thread, message) VALUES (?, ?, ?, ?, ?, ?)";
     private static final int CORRELATION_ID_MAX_LENGTH = 64;
     private static final int LOGGER_NAME_MAX_LENGTH = 200;
+    private static final int THREAD_NAME_MAX_LENGTH = 120;
 
     @Override
     protected void append(ILoggingEvent event) {
@@ -27,6 +29,7 @@ public class DbLogAppender extends AppenderBase<ILoggingEvent> {
 
         String correlationId = truncate(event.getMDCPropertyMap().get(CORRELATION_ID_MDC_KEY), CORRELATION_ID_MAX_LENGTH);
         String loggerName = truncate(event.getLoggerName(), LOGGER_NAME_MAX_LENGTH);
+        String threadName = truncate(event.getThreadName(), THREAD_NAME_MAX_LENGTH);
 
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(INSERT_SQL)) {
@@ -34,7 +37,8 @@ public class DbLogAppender extends AppenderBase<ILoggingEvent> {
             statement.setTimestamp(2, Timestamp.from(event.getInstant()));
             statement.setString(3, event.getLevel().toString());
             statement.setString(4, loggerName);
-            statement.setString(5, event.getFormattedMessage());
+            statement.setString(5, threadName);
+            statement.setString(6, event.getFormattedMessage());
             statement.executeUpdate();
         } catch (SQLException e) {
             addError("Failed to write log event to app_log", e);
