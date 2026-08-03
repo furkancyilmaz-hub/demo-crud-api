@@ -167,6 +167,28 @@ class CorrelationIdFilterTest {
         assertThat(logAppender.list).isEmpty();
     }
 
+    @Test
+    void shouldNotLogRequestCompletedForSwaggerUi() throws ServletException, IOException {
+        when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn("caller-id-123");
+        when(request.getRequestURI()).thenReturn("/swagger-ui/index.html");
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        assertThat(logAppender.list).isEmpty();
+    }
+
+    @Test
+    void shouldNotLogRequestCompletedForApiDocs() throws ServletException, IOException {
+        when(request.getHeader(CORRELATION_ID_HEADER)).thenReturn("caller-id-123");
+        when(request.getRequestURI()).thenReturn("/v3/api-docs");
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        assertThat(logAppender.list).isEmpty();
+    }
+
     private Logger filterLogger() {
         return (Logger) LoggerFactory.getLogger(CorrelationIdFilter.class);
     }

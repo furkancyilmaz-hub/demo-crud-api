@@ -3,6 +3,8 @@ package com.furkan.democrudapi.controller;
 import com.furkan.democrudapi.dto.RequestSummaryResponse;
 import com.furkan.democrudapi.exception.InvalidLogQueryException;
 import com.furkan.democrudapi.service.RequestQueryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -18,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/internal/requests")
 @Validated
+@Tag(name = "Internal — requests", description = "Completed request summaries consumed by the N+1 analysis")
 public class InternalRequestController {
 
     private final RequestQueryService requestQueryService;
@@ -26,6 +29,7 @@ public class InternalRequestController {
         this.requestQueryService = requestQueryService;
     }
 
+    @Operation(summary = "Query completed request summaries within a time range")
     @GetMapping
     public List<RequestSummaryResponse> query(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
