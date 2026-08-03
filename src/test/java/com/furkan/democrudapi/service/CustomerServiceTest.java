@@ -1,6 +1,5 @@
 package com.furkan.democrudapi.service;
 
-import com.furkan.democrudapi.config.BugProperties;
 import com.furkan.democrudapi.dto.CustomerCreateRequest;
 import com.furkan.democrudapi.dto.CustomerResponse;
 import com.furkan.democrudapi.dto.CustomerUpdateRequest;
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -51,9 +49,6 @@ class CustomerServiceTest {
 
     @Mock
     private PaymentRepository paymentRepository;
-
-    @Spy
-    private BugProperties bugProperties = new BugProperties();
 
     @InjectMocks
     private CustomerService customerService;
@@ -111,7 +106,7 @@ class CustomerServiceTest {
         Page<Customer> page = new PageImpl<>(List.of(customer));
         when(customerRepository.findByProposalId(1L, PageRequest.of(0, 10))).thenReturn(page);
 
-        Page<CustomerResponse> result = customerService.list(1L, false, PageRequest.of(0, 10));
+        Page<CustomerResponse> result = customerService.list(1L, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).hasSize(1);
     }
@@ -131,57 +126,53 @@ class CustomerServiceTest {
     }
 
     @Test
-    void shouldReturnEmptyPaymentsWhenWithPaymentsFalse() {
+    void shouldNotLoadPaymentsWhenListingPlain() {
         Customer customer = newCustomerWithPayments();
         when(customerRepository.findAll(PageRequest.of(0, 10)))
                 .thenReturn(new PageImpl<>(List.of(customer)));
 
-        Page<CustomerResponse> result = customerService.list(null, false, PageRequest.of(0, 10));
+        Page<CustomerResponse> result = customerService.list(null, PageRequest.of(0, 10));
 
         assertThat(result.getContent().getFirst().payments()).isEmpty();
         verify(customerRepository, never()).findByIdIn(anyCollection());
     }
 
     @Test
-    void shouldLoadPaymentsPerCustomerWhenNPlusOneEnabled() {
+    void shouldReadPaymentsFromEachCustomerWhenListingDetail() {
         Customer customer = newCustomerWithPayments();
-        bugProperties.setNPlusOne(true);
         when(customerRepository.findAll(PageRequest.of(0, 10)))
                 .thenReturn(new PageImpl<>(List.of(customer)));
 
-        Page<CustomerResponse> result = customerService.list(null, true, PageRequest.of(0, 10));
+        Page<CustomerResponse> result = customerService.listDetail(null, PageRequest.of(0, 10));
 
         assertThat(result.getContent().getFirst().payments()).hasSize(2);
         verify(customerRepository, never()).findByIdIn(anyCollection());
     }
 
     @Test
-    void shouldLoadPaymentsInSingleQueryWhenNPlusOneDisabled() {
+    void shouldLoadPaymentsInOneQueryWhenListingOverview() {
         Customer customer = newCustomerWithPayments();
-        bugProperties.setNPlusOne(false);
         when(customerRepository.findAll(PageRequest.of(0, 10)))
                 .thenReturn(new PageImpl<>(List.of(customer)));
         when(customerRepository.findByIdIn(List.of(10L))).thenReturn(List.of(customer));
 
-        Page<CustomerResponse> result = customerService.list(null, true, PageRequest.of(0, 10));
+        Page<CustomerResponse> result = customerService.listOverview(null, PageRequest.of(0, 10));
 
         assertThat(result.getContent().getFirst().payments()).hasSize(2);
         verify(customerRepository).findByIdIn(List.of(10L));
     }
 
     @Test
-    void shouldReturnSameContentRegardlessOfNPlusOneFlag() {
+    void shouldReturnIdenticalContentFromDetailAndOverview() {
         Customer customer = newCustomerWithPayments();
         when(customerRepository.findAll(PageRequest.of(0, 10)))
                 .thenReturn(new PageImpl<>(List.of(customer)));
         when(customerRepository.findByIdIn(List.of(10L))).thenReturn(List.of(customer));
 
-        bugProperties.setNPlusOne(true);
-        List<CustomerResponse> withBug = customerService.list(null, true, PageRequest.of(0, 10)).getContent();
-        bugProperties.setNPlusOne(false);
-        List<CustomerResponse> withoutBug = customerService.list(null, true, PageRequest.of(0, 10)).getContent();
+        List<CustomerResponse> detail = customerService.listDetail(null, PageRequest.of(0, 10)).getContent();
+        List<CustomerResponse> overview = customerService.listOverview(null, PageRequest.of(0, 10)).getContent();
 
-        assertThat(withBug).isEqualTo(withoutBug);
+        assertThat(detail).isEqualTo(overview);
     }
 
     @Test

@@ -3,7 +3,9 @@ package com.furkan.democrudapi.controller;
 import com.furkan.democrudapi.dto.CustomerCreateRequest;
 import com.furkan.democrudapi.dto.CustomerResponse;
 import com.furkan.democrudapi.dto.CustomerUpdateRequest;
+import com.furkan.democrudapi.dto.PaymentResponse;
 import com.furkan.democrudapi.service.CustomerService;
+import com.furkan.democrudapi.service.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,9 +26,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 public class CustomerController {
 
     private final CustomerService customerService;
+    private final PaymentService paymentService;
 
-    public CustomerController(CustomerService customerService) {
+    public CustomerController(CustomerService customerService, PaymentService paymentService) {
         this.customerService = customerService;
+        this.paymentService = paymentService;
     }
 
     @PostMapping
@@ -45,15 +49,28 @@ public class CustomerController {
     }
 
     @GetMapping
-    public Page<CustomerResponse> list(@RequestParam(required = false) Long proposalId,
-                                       @RequestParam(defaultValue = "false") boolean withPayments,
-                                       Pageable pageable) {
-        return customerService.list(proposalId, withPayments, pageable);
+    public Page<CustomerResponse> list(@RequestParam(required = false) Long proposalId, Pageable pageable) {
+        return customerService.list(proposalId, pageable);
+    }
+
+    @GetMapping("/detail")
+    public Page<CustomerResponse> listDetail(@RequestParam(required = false) Long proposalId, Pageable pageable) {
+        return customerService.listDetail(proposalId, pageable);
+    }
+
+    @GetMapping("/overview")
+    public Page<CustomerResponse> listOverview(@RequestParam(required = false) Long proposalId, Pageable pageable) {
+        return customerService.listOverview(proposalId, pageable);
     }
 
     @GetMapping("/search")
     public Page<CustomerResponse> searchByCity(@RequestParam String city, Pageable pageable) {
         return customerService.searchByCity(city, pageable);
+    }
+
+    @GetMapping("/{id}/payments")
+    public Page<PaymentResponse> listPayments(@PathVariable Long id, Pageable pageable) {
+        return paymentService.list(id, pageable);
     }
 
     @PutMapping("/{id}")

@@ -33,15 +33,6 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void shouldMapInvalidExplainQueryExceptionTo400() {
-        ResponseEntity<ErrorResponse> response = handler.handleInvalidExplainQuery(
-                new InvalidExplainQueryException("Only SELECT or WITH queries are allowed"));
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody().message()).isEqualTo("Only SELECT or WITH queries are allowed");
-    }
-
-    @Test
     void shouldMapDuplicateProposalNoExceptionTo409() {
         ResponseEntity<ErrorResponse> response = handler.handleConflict(
                 new DuplicateProposalNoException("Proposal no already exists: PN-001"));
