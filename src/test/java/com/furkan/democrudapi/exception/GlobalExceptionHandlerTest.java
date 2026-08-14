@@ -33,6 +33,23 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void shouldMapInvalidSearchQueryExceptionTo400() {
+        ResponseEntity<ErrorResponse> response = handler.handleInvalidQuery(
+                new InvalidSearchQueryException("Either 'city' or the 'proposalId'/'identityNo' pair is required"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().message()).contains("identityNo");
+    }
+
+    @Test
+    void shouldMapInvalidLogQueryExceptionTo400() {
+        ResponseEntity<ErrorResponse> response = handler.handleInvalidQuery(
+                new InvalidLogQueryException("Parameter 'from' must not be after 'to'"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void shouldMapDuplicateProposalNoExceptionTo409() {
         ResponseEntity<ErrorResponse> response = handler.handleConflict(
                 new DuplicateProposalNoException("Proposal no already exists: PN-001"));

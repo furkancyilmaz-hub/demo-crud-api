@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -47,6 +48,12 @@ public class ProposalController {
     @GetMapping("/{id}")
     public ProposalResponse getById(@PathVariable Long id) {
         return proposalService.getById(id);
+    }
+
+    @Operation(summary = "Get a single proposal by proposal no")
+    @GetMapping("/search")
+    public ProposalResponse searchByProposalNo(@RequestParam String proposalNo) {
+        return proposalService.getByProposalNo(proposalNo);
     }
 
     @Operation(summary = "List proposals without their customers")

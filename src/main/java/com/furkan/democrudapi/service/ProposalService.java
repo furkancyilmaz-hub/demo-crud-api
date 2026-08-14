@@ -53,6 +53,10 @@ public class ProposalService {
         return ProposalResponse.from(findProposalOrThrow(id));
     }
 
+    public ProposalResponse getByProposalNo(String proposalNo) {
+        return ProposalResponse.from(findProposalOrThrow(proposalNo));
+    }
+
     public Page<ProposalResponse> list(Pageable pageable) {
         return proposalRepository.findAll(pageable).map(ProposalResponse::from);
     }
@@ -86,5 +90,10 @@ public class ProposalService {
     private Proposal findProposalOrThrow(Long id) {
         return proposalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Proposal not found: " + id));
+    }
+
+    private Proposal findProposalOrThrow(String proposalNo) {
+        return proposalRepository.findByProposalNo(proposalNo)
+                .orElseThrow(() -> new ResourceNotFoundException("Proposal not found: " + proposalNo));
     }
 }

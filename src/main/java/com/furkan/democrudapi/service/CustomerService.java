@@ -57,6 +57,15 @@ public class CustomerService {
         return customerRepository.findByCity(city, pageable).map(CustomerResponse::from);
     }
 
+    /**
+     * Searches within a single proposal. The proposal itself is not verified to exist; an
+     * unknown id yields an empty page, the same way {@link #list(Long, Pageable)} behaves.
+     */
+    public Page<CustomerResponse> searchByIdentityNo(Long proposalId, String identityNo, Pageable pageable) {
+        return customerRepository.findByProposalIdAndIdentityNo(proposalId, identityNo, pageable)
+                .map(CustomerResponse::from);
+    }
+
     public Page<CustomerResponse> list(Long proposalId, Pageable pageable) {
         return findPage(proposalId, pageable).map(CustomerResponse::from);
     }

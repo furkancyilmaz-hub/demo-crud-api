@@ -101,6 +101,26 @@ class ProposalServiceTest {
     }
 
     @Test
+    void shouldReturnProposalWhenSearchingByExistingProposalNo() {
+        Proposal proposal = newProposal(1L, "PN-001", ProposalStatus.DRAFT, LocalDate.now(), BigDecimal.TEN);
+        when(proposalRepository.findByProposalNo("PN-001")).thenReturn(Optional.of(proposal));
+
+        ProposalResponse response = proposalService.getByProposalNo("PN-001");
+
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.proposalNo()).isEqualTo("PN-001");
+    }
+
+    @Test
+    void shouldThrowResourceNotFoundExceptionWhenProposalNoDoesNotExist() {
+        when(proposalRepository.findByProposalNo("PN-999")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> proposalService.getByProposalNo("PN-999"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("PN-999");
+    }
+
+    @Test
     void shouldReturnPagedProposalsWhenListCalled() {
         Proposal proposal = newProposal(1L, "PN-001", ProposalStatus.DRAFT, LocalDate.now(), BigDecimal.TEN);
         Page<Proposal> page = new PageImpl<>(List.of(proposal));

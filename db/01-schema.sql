@@ -47,6 +47,11 @@ CREATE TABLE app_log (
 CREATE INDEX idx_customer_proposal ON customer(proposal_id);
 CREATE INDEX idx_payment_customer  ON payment(customer_id);
 
+-- SP0014: /api/customers/search?proposalId=&identityNo= sorgusu için.
+-- idx_customer_proposal'ı prefix olarak kapsar; o index bilinçli olarak
+-- (kapsam dışı refactor yapmamak için) yerinde bırakılmıştır.
+CREATE INDEX idx_customer_proposal_identity ON customer(proposal_id, identity_no);
+
 CREATE INDEX idx_app_log_correlation ON app_log(correlation_id, timestamp);
 
 -- /internal/logs ve /internal/requests artık saf zaman aralığıyla da sorgulanıyor;
