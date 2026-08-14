@@ -126,6 +126,30 @@ class CustomerServiceTest {
     }
 
     @Test
+    void shouldReturnPagedCustomersFilteredByProposalIdAndIdentityNo() {
+        Proposal proposal = newProposal(1L);
+        Customer customer = newCustomer(10L, proposal,
+                new CustomerCreateRequest(1L, "12345678901", "Jane Doe", "Istanbul", CustomerStatus.ACTIVE));
+        when(customerRepository.findByProposalIdAndIdentityNo(1L, "12345678901", PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(customer)));
+
+        Page<CustomerResponse> result = customerService.searchByIdentityNo(1L, "12345678901", PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().proposalId()).isEqualTo(1L);
+    }
+
+    @Test
+    void shouldReturnEmptyPageWhenNoCustomerMatchesIdentityNoInProposal() {
+        when(customerRepository.findByProposalIdAndIdentityNo(1L, "00000000000", PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        Page<CustomerResponse> result = customerService.searchByIdentityNo(1L, "00000000000", PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
     void shouldNotLoadPaymentsWhenListingPlain() {
         Customer customer = newCustomerWithPayments();
         when(customerRepository.findAll(PageRequest.of(0, 10)))

@@ -31,8 +31,8 @@ public class GlobalExceptionHandler {
         return errorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(InvalidLogQueryException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidLogQuery(InvalidLogQueryException ex) {
+    @ExceptionHandler({InvalidLogQueryException.class, InvalidSearchQueryException.class})
+    public ResponseEntity<ErrorResponse> handleInvalidQuery(RuntimeException ex) {
         return errorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 

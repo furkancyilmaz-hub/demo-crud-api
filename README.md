@@ -53,7 +53,7 @@ Teknik katmanlara göre ayrılmıştır:
 | GET | `/api/customers` | Müşterileri listele (opsiyonel `proposalId` filtresi) |
 | GET | `/api/customers/detail` | Müşteri + ödemeleri (her müşteri için ayrı sorgu — N+1 senaryosunu göstermek için) |
 | GET | `/api/customers/overview` | Müşteri + ödemeleri (tek sorguda, toplu) |
-| GET | `/api/customers/search` | Şehre göre müşteri ara (`city` kolonunda bilinçli olarak index yok — eksik index senaryosu) |
+| GET | `/api/customers/search` | Müşteri ara. İki mod: sadece `city` (bu kolonda bilinçli olarak index yok — eksik index senaryosu), ya da `proposalId` + `identityNo` birlikte (bir teklifin müşterileri içinde kimlik no ile arama). Başka kombinasyon `400` döner |
 | GET | `/api/customers/{id}/payments` | Bir müşterinin ödemeleri |
 | PUT | `/api/customers/{id}` | Müşteri güncelle |
 | DELETE | `/api/customers/{id}` | Müşteri sil |
@@ -64,6 +64,7 @@ Teknik katmanlara göre ayrılmıştır:
 |---|---|---|
 | POST | `/api/proposals` | Teklif oluştur |
 | GET | `/api/proposals/{id}` | Tek teklif getir |
+| GET | `/api/proposals/search` | `proposalNo` ile tek teklif getir (kolon unique; bulunamazsa `404`) |
 | GET | `/api/proposals` | Teklifleri listele |
 | GET | `/api/proposals/detail` | Teklif + müşterileri |
 | PUT | `/api/proposals/{id}` | Teklif güncelle |
@@ -126,5 +127,6 @@ Uygulama varsayılan olarak `8080` portunda ayağa kalkar. Veritabanı ilk kalk�
 
 ## Notlar
 
-- `customer.city` kolonu bilinçli olarak index'siz bırakılmıştır; `/api/customers/search` bu eksik index senaryosunu göstermek için kullanılır.
+- `customer.city` kolonu bilinçli olarak index'siz bırakılmıştır; `/api/customers/search?city=` bu eksik index senaryosunu göstermek için kullanılır.
+- Buna karşılık `/api/customers/search?proposalId=&identityNo=` sorgusu `idx_customer_proposal_identity` composite index'i üzerinden çalışır — aynı endpoint üzerinde indexli ve indexsiz aramayı karşılaştırmayı mümkün kılar.
 - `/api/customers/detail` ile `/api/customers/overview` aynı veriyi farklı sorgulama stratejileriyle (N+1 vs. toplu) döndürür; N+1 analizini karşılaştırmalı göstermek amaçlıdır.

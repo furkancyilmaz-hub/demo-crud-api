@@ -33,12 +33,13 @@ class OpenApiDocsTest {
             "/api/proposals",
             "/api/proposals/{id}",
             "/api/proposals/detail",
+            "/api/proposals/search",
             "/internal/logs",
             "/internal/requests",
             "/internal/schema/foreign-keys",
     };
 
-    private static final int EXPECTED_OPERATION_COUNT = 23;
+    private static final int EXPECTED_OPERATION_COUNT = 24;
 
     @Autowired
     private MockMvc mockMvc;
